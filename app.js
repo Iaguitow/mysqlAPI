@@ -54,6 +54,35 @@ app.get('/managerDrivers/NextWeek', function g (req, res) {
   });
 });
 
+app.get('/managerUsers/getListPeoples', function g (req, res) {
+
+  var sqlStr = "SELECT p.name, p.email, p.phonenumber, p.password, p.fk_idcategory, p.active FROM people p;";
+
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+          
+      // Executing the MySQL query
+      connection.query(sqlStr.toString(), function (error, results, fields) {
+
+        if (error != null){
+          res.send(error);
+          console.log(error+ "ahh");
+          throw error
+          
+        } else if(results[0] != null) {
+          res.send(results);
+
+        } else {
+          res.send("Not Found Data");
+
+        }
+      });
+    });
+  connection.release(); 
+  });
+});
+
 app.get('/managerDrivers/Routes', function g (req, res) {
 
   var sqlStr = "SELECT r.routename, r.idroutes AS keyroute FROM route r ORDER BY r.idroutes ASC;";
@@ -284,7 +313,8 @@ app.post('/managerDrivers/DriversWorkedWeek', function s (req, res) {
 	sqlStr += " ww.weeknumber AS 'Week Number', ";
 	sqlStr += " ww.startdt AS 'Week Started', ";
 	sqlStr += " ww.enddt AS 'Week Ended', ";
-	sqlStr += " wd.date AS 'Route Day', ";
+  sqlStr += " wd.date AS 'Route Day', ";
+  sqlStr += " IF(pwd.worked IS NULL,'Without Answer',IF(pwd.worked='S','YES','NO')) AS 'Worked', ";
 	sqlStr += " IFNULL(wd.drivers_amount,0) AS 'Total Drivers Worked', ";
 	sqlStr += " p.name AS 'Driver', ";
 	sqlStr += " p.email AS 'Driver Email', ";
@@ -297,14 +327,14 @@ app.post('/managerDrivers/DriversWorkedWeek', function s (req, res) {
   sqlStr += " INNER JOIN people p ON (pwd.fk_people = p.idpeople) ";
   sqlStr += " LEFT JOIN route r ON (pwd.fk_route = r.idroutes) ";
   sqlStr += " WHERE ww.idworkweek = "+idWorkWeek;
-  sqlStr += " AND IFNULL(pwd.worked,'N') IN ('S','N'); ";
+  sqlStr += " AND IFNULL(pwd.worked,'N') IN ('S','N') ";
+  sqlStr += " ORDER BY wd.date DESC ";
 
   db.getConnection(function (err, connection) {
 
     connection.connect(function (err) {
     // Executing the MySQL
       connection.query(sqlStr.toString(), function (error, result, fields) {
-  
         if (error != null){
           res.send(error);
           console.log(error);
@@ -330,7 +360,8 @@ app.post('/managerDrivers/DriversWorked', function s (req, res) {
 	sqlStr += " ww.weeknumber AS 'Week Number', ";
 	sqlStr += " ww.startdt AS 'Week Started', ";
 	sqlStr += " ww.enddt AS 'Week Ended', ";
-	sqlStr += " wd.date AS 'Route Day', ";
+  sqlStr += " wd.date AS 'Route Day', ";
+  sqlStr += " IF(pwd.worked IS NULL,'Without Answer',IF(pwd.worked='S','YES','NO')) AS 'Worked', ";
 	sqlStr += " IFNULL(wd.drivers_amount,0) AS 'Total Drivers Worked', ";
 	sqlStr += " p.name AS 'Driver', ";
 	sqlStr += " p.email AS 'Driver Email', ";
