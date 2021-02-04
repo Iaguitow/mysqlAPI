@@ -267,7 +267,50 @@ app.get('/list/managerDrivers', function g (req, res) {
     });
   connection.release(); 
   });
-}); 
+});
+
+app.post('/managerUsers/insertNewUser', function s (req, res) {
+
+  var userName = JSON.stringify(req.body.userName);
+  var userMail = JSON.stringify(req.body.userMail);
+  var userPassword = JSON.stringify(req.body.userPassword);
+  var userCategory = JSON.stringify(req.body.userCategory);
+  var userActive = JSON.stringify(req.body.userActive);
+  var userPhonenumber = JSON.stringify(req.body.userPhonenumber);
+      
+  var sqlStr = " INSERT INTO people (NAME, email, phonenumber, PASSWORD, fk_idcategory, active) ";
+      sqlStr += " (SELECT ";
+      sqlStr += userName+", ";
+      sqlStr += userMail+", ";
+      sqlStr += userPhonenumber+", ";
+      sqlStr += userPassword+", ";
+      sqlStr += userCategory+", ";
+      sqlStr += userActive+" ";
+      sqlStr += " FROM people p ";
+      sqlStr += " WHERE (SELECT count(email) FROM people pp where pp.email = "+userMail+")=0 LIMIT 1) ";
+  
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+    // Executing the MySQL
+      connection.query(sqlStr.toString(), function (error, result, fields) {
+ 
+        if (error != null){
+          res.send(error);
+          console.log(error);
+
+        } else if(result.affectedRows != 0) {
+          res.send("Sucessfully Update.");
+
+        } else {
+          res.send("Error, E-mail already exist.");
+
+        }
+      });
+    });
+    connection.release();
+  });
+});
 
 app.post('/managerDrivers/insertNewDay', function s (req, res) {
 
@@ -276,8 +319,7 @@ app.post('/managerDrivers/insertNewDay', function s (req, res) {
   var sqlStr = " INSERT INTO workday (date, fk_workweek) ";   
   sqlStr += " (SELECT "+dayToday+" AS newDate, ww.idworkweek FROM workweek ww ";
   sqlStr += " WHERE "+dayToday+" BETWEEN ww.startdt AND ww.enddt ";
-  sqlStr += " AND "+dayToday+" NOT IN ";
-  sqlStr += " (SELECT DATE FROM workday wd WHERE wd.fk_workweek = ww.idworkweek)); ";
+  sqlStr += " AND (SELECT COUNT(DATE) FROM workday wd WHERE wd.date = "+dayToday+") = 0 LIMIT 1); ";
   
   db.getConnection(function (err, connection) {
 
