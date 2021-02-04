@@ -83,6 +83,35 @@ app.get('/managerUsers/getListPeoples', function g (req, res) {
   });
 });
 
+app.get('/managerUsers/getListCategory', function g (req, res) {
+
+  var sqlStr = "SELECT idpeoplecategory, namecategory FROM peoplecategory;";
+
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+          
+      // Executing the MySQL query
+      connection.query(sqlStr.toString(), function (error, results, fields) {
+        
+        if (error != null){
+          res.send(error);
+          console.log(error+ "ahh");
+          throw error
+          
+        } else if(results[0] != null) {
+          res.send(results);
+
+        } else {
+          res.send("Not Found Data");
+
+        }
+      });
+    });
+  connection.release(); 
+  });
+});
+
 app.get('/managerDrivers/Routes', function g (req, res) {
 
   var sqlStr = "SELECT r.routename, r.idroutes AS keyroute FROM route r ORDER BY r.idroutes ASC;";
