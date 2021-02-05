@@ -54,7 +54,9 @@ app.get('/managerDrivers/NextWeek', function g (req, res) {
   });
 });
 
-app.get('/managerUsers/getListPeoples', function g (req, res) {
+app.post('/managerUsers/getListPeoples', function g (req, res) {
+
+  var disabledUsers = JSON.stringify(req.body.disabledUsers);
 
   var sqlStr =  "SELECT "; 
       sqlStr += "p.idpeople, ";
@@ -64,7 +66,11 @@ app.get('/managerUsers/getListPeoples', function g (req, res) {
       sqlStr += "p.password, "; 
       sqlStr += "p.fk_idcategory, "; 
       sqlStr += "p.active ";
-      sqlStr += "FROM people p ORDER BY p.name ASC ";
+      sqlStr += "FROM people p ";
+      if(disabledUsers=="true"){
+        sqlStr += "WHERE 0 = 0 ";
+      }else{sqlStr += "WHERE p.active = 'S' ";}
+      sqlStr += "ORDER BY p.active DESC, p.name ASC ";
 
   db.getConnection(function (err, connection) {
 
