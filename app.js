@@ -56,7 +56,15 @@ app.get('/managerDrivers/NextWeek', function g (req, res) {
 
 app.get('/managerUsers/getListPeoples', function g (req, res) {
 
-  var sqlStr = "SELECT p.name, p.email, p.phonenumber, p.password, p.fk_idcategory, p.active FROM people p;";
+  var sqlStr =  "SELECT "; 
+      sqlStr += "p.idpeople, ";
+      sqlStr += "p.name, "; 
+      sqlStr += "p.email, "; 
+      sqlStr += "p.phonenumber, "; 
+      sqlStr += "p.password, "; 
+      sqlStr += "p.fk_idcategory, "; 
+      sqlStr += "p.active ";
+      sqlStr += "FROM people p ORDER BY p.name ASC ";
 
   db.getConnection(function (err, connection) {
 
@@ -266,6 +274,48 @@ app.get('/list/managerDrivers', function g (req, res) {
       });
     });
   connection.release(); 
+  });
+});
+
+app.post('/managerUsers/updateUser', function s (req, res) {
+
+  var userName = JSON.stringify(req.body.userName);
+  var userMail = JSON.stringify(req.body.userMail);
+  var userPassword = JSON.stringify(req.body.userPassword);
+  var userCategory = JSON.stringify(req.body.userCategory);
+  var userActive = JSON.stringify(req.body.userActive);
+  var userPhonenumber = JSON.stringify(req.body.userPhonenumber);
+  var idpeople = JSON.stringify(req.body.idpeople);
+      
+  var sqlStr = " UPDATE people ";
+      sqlStr += " set name = "+userName+", ";
+      sqlStr += " email = "+userMail+", ";
+      sqlStr += " phonenumber = "+userPhonenumber+", ";
+      sqlStr += " password = "+userPassword+", ";
+      sqlStr += " fk_idcategory = "+userCategory+", ";
+      sqlStr += " active = "+userActive+" ";
+      sqlStr += " WHERE idpeople = "+idpeople+" ";
+  
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+    // Executing the MySQL
+      connection.query(sqlStr.toString(), function (error, result, fields) {
+ 
+        if (error != null){
+          res.send(error);
+          console.log(error);
+
+        } else if(result.affectedRows != 0) {
+          res.send("Sucessfully Update.");
+
+        } else {
+          res.send("Error, E-mail already exist.");
+
+        }
+      });
+    });
+    connection.release();
   });
 });
 
