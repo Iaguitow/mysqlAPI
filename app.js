@@ -368,6 +368,43 @@ app.post('/managerUsers/insertNewUser', function s (req, res) {
   });
 });
 
+app.post('/managerRoute/insertNewRoute', function s (req, res) {
+
+  var keyRoute = JSON.stringify(req.body.keyRoute);
+  var namRoute = JSON.stringify(req.body.namRoute);
+  var routePrice = JSON.stringify(req.body.routePrice);
+      
+  var sqlStr = " INSERT INTO route (routename, routekey, price) ";   
+  sqlStr += " (SELECT ";
+  sqlStr += " "+namRoute+" AS nameRoute, ";
+  sqlStr += " "+keyRoute+" AS keyRoute, ";
+  sqlStr += " "+routePrice+" AS routePrice ";
+  sqlStr += " FROM route ww ";
+  sqlStr += " WHERE (SELECT COUNT(routekey) FROM route wd WHERE wd.routekey = "+keyRoute+") = 0 LIMIT 1); ";
+  
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+    // Executing the MySQL
+      connection.query(sqlStr.toString(), function (error, result, fields) {
+ 
+        if (error != null){
+          res.send(error);
+          console.log(error);
+
+        } else if(result.affectedRows != 0) {
+          res.send("Sucessfully Update.");
+
+        } else {
+          res.send("This Key has been already created.");
+
+        }
+      });
+    });
+    connection.release();
+  });
+});
+
 app.post('/managerDrivers/insertNewDay', function s (req, res) {
 
   var dayToday = JSON.stringify(req.body.dayToday);
