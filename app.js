@@ -6,8 +6,7 @@ const dotenv = require("dotenv");
 dotenv.config({path:"./.env"});
 
 const app = express();
-app.use(express.json());
-
+app.use(express.json({limit: '10mb', extended: true}));
 
 const db = mysql.createPool({
     connectionLimit : 100000,
@@ -58,7 +57,8 @@ app.post('/managerUsers/getListPeoples', function g (req, res) {
 
   var disabledUsers = JSON.stringify(req.body.disabledUsers);
 
-  var sqlStr =  "SELECT "; 
+  var sqlStr =  "SELECT ";
+      sqlStr += "p.profilephoto, ";  
       sqlStr += "p.idpeople, ";
       sqlStr += "p.name, "; 
       sqlStr += "p.email, "; 
@@ -85,6 +85,7 @@ app.post('/managerUsers/getListPeoples', function g (req, res) {
           throw error
           
         } else if(results[0] != null) {
+          console.log(results);
           res.send(results);
 
         } else {
@@ -316,7 +317,7 @@ app.post('/managerUsers/updateUser', function s (req, res) {
           res.send("Sucessfully Update.");
 
         } else {
-          res.send("Error, E-mail already exist.");
+          res.send("Nothing Changed.");
 
         }
       });
@@ -367,6 +368,39 @@ app.post('/managerUsers/insertNewUser', function s (req, res) {
     connection.release();
   });
 });
+
+app.post('/managerUsers/insertNewUserPhoto', function s (req, res) {
+
+  var photoBlob = JSON.stringify(req.body.photoBlob);
+  var idUser = JSON.stringify(req.body.idUser);
+      
+  var sqlStr = " UPDATE people ";
+      sqlStr += " set profilephoto = "+photoBlob+" ";
+      sqlStr += " WHERE idpeople = "+idUser+" ";
+  
+  db.getConnection(function (err, connection) {
+
+    connection.connect(function (err) {
+    // Executing the MySQL
+      connection.query(sqlStr.toString(), function (error, result, fields) {
+ 
+        if (error != null){
+          res.send(error);
+          console.log(error);
+
+        } else if(result.affectedRows != 0) {
+          res.send("Sucessfully Update.");
+
+        } else {
+          res.send("Nothing Changed.");
+
+        }
+      });
+    });
+    connection.release();
+  });
+});
+
 
 app.post('/managerRoute/insertNewRoute', function s (req, res) {
 
@@ -632,7 +666,7 @@ app.post('/auth/login', function s (req, res) {
   var dtEmail = JSON.stringify(req.body.email);
   var dtPassword = JSON.stringify(req.body.password);
       
-  var sqlStr = "SELECT p.idpeople, p.email, "; 
+  var sqlStr = "SELECT p.idpeople, p.email, profilephoto, "; 
   sqlStr += " CONCAT(Upper(SUBSTRING(p.name,1,1)),substring((substring_index(p.name,' ',1)),2)";
   sqlStr += " ,' ',UPPER(SUBSTRING(substring_index(p.name,' ',-1),1,1)),SUBSTRING(substring_index(p.name,' ',-1),2)) as name,";
   sqlStr += " pc.namecategory FROM people p, peoplecategory pc "; 
@@ -644,13 +678,16 @@ app.post('/auth/login', function s (req, res) {
     connection.connect(function (err) {
     // Executing the MySQL
       connection.query(sqlStr.toString(), function (error, results, fields) {
-  
+ 
         if (error != null){
           res.send(error);
           console.log(error);
 
         } else if(results[0] != null) {
-          res.send(results);
+          photoBase64 = results[0].profilephoto.toString('utf8');
+          var response = JSON.stringify({"profilephoto":photoBase64,"idpeople":results[0].idpeople,
+          "email":results[0].email,"name":results[0].name,"namecategory":results[0].namecategory});
+          res.send(response);
 
         } else {
           res.send("Incorrect Email or Password.");
