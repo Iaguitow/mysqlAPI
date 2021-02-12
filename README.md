@@ -1,4 +1,4 @@
-# mysqlAPI: Execute this query before try teste the project.
+# mysqlAPI: Execute this query before try test the project.
 
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
